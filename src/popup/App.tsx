@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Workflow } from '../types/workflow';
 import WorkflowList from './components/WorkflowList';
 import WorkflowEditor from './components/WorkflowEditor';
+import ExecutionDialog from './components/ExecutionDialog';
 
 const App: React.FC = () => {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [currentWorkflow, setCurrentWorkflow] = useState<Workflow | null>(null);
   const [view, setView] = useState<'list' | 'editor'>('list');
+  const [executingWorkflow, setExecutingWorkflow] = useState<Workflow | null>(null);
 
   useEffect(() => {
     loadWorkflows();
@@ -29,6 +31,7 @@ const App: React.FC = () => {
       nodes: [],
       edges: [],
       variables: {},
+      variableDefinitions: [],
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -68,15 +71,24 @@ const App: React.FC = () => {
   };
 
   const executeWorkflow = async (workflowId: string) => {
+    const workflow = workflows.find(w => w.id === workflowId);
+    if (workflow) {
+      setExecutingWorkflow(workflow);
+    }
+  };
+
+  const performExecution = async (workflow: Workflow, variableValues: Record<string, string>) => {
     try {
       const response = await chrome.runtime.sendMessage({
         type: 'EXECUTE_WORKFLOW',
-        workflowId,
-        variables: {}
+        workflowId: workflow.id,
+        variables: variableValues
       });
       console.log('Workflow execution result:', response);
+      setExecutingWorkflow(null);
     } catch (error) {
       console.error('Error executing workflow:', error);
+      setExecutingWorkflow(null);
     }
   };
 
@@ -124,6 +136,14 @@ const App: React.FC = () => {
             setView('list');
             setCurrentWorkflow(null);
           }}
+        />
+      )}
+      
+      {executingWorkflow && (
+        <ExecutionDialog
+          workflow={executingWorkflow}
+          onExecute={performExecution}
+          onCancel={() => setExecutingWorkflow(null)}
         />
       )}
     </div>

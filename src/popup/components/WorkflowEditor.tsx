@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Workflow, WorkflowNode } from '../../types/workflow';
+import { Workflow, WorkflowNode, WorkflowVariable } from '../../types/workflow';
+import VariableManager from './VariableManager';
 
 interface WorkflowEditorProps {
   workflow: Workflow | null;
@@ -15,12 +16,14 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [nodes, setNodes] = useState<WorkflowNode[]>([]);
+  const [variableDefinitions, setVariableDefinitions] = useState<WorkflowVariable[]>([]);
 
   useEffect(() => {
     if (workflow) {
       setName(workflow.name);
       setDescription(workflow.description);
       setNodes(workflow.nodes);
+      setVariableDefinitions(workflow.variableDefinitions || []);
     }
   }, [workflow]);
 
@@ -59,6 +62,7 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
       description,
       nodes,
       edges: [],
+      variableDefinitions,
       updatedAt: new Date()
     };
 
@@ -241,7 +245,7 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
                       fontSize: '12px',
                       resize: 'vertical'
                     }}
-                    placeholder="Enter your prompt here..."
+                    placeholder="Enter your prompt here... Use {variable_name} for variables."
                   />
                 </div>
               </div>
@@ -249,6 +253,12 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
           </div>
         )}
       </div>
+
+      <VariableManager
+        variables={variableDefinitions}
+        prompts={nodes.map(node => node.data.prompt || '')}
+        onChange={setVariableDefinitions}
+      />
     </div>
   );
 };

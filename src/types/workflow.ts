@@ -18,6 +18,12 @@ export interface WorkflowEdge {
   type?: string;
 }
 
+export interface WorkflowVariable {
+  name: string;
+  value: string;
+  description?: string;
+}
+
 export interface Workflow {
   id: string;
   name: string;
@@ -25,6 +31,7 @@ export interface Workflow {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
   variables: Record<string, any>;
+  variableDefinitions: WorkflowVariable[];
   createdAt: Date;
   updatedAt: Date;
 }

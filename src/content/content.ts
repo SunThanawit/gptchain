@@ -1,4 +1,5 @@
 import { Workflow } from '../types/workflow';
+import { substituteVariables } from '../utils/variableParser';
 
 class ChatGPTIntegration {
   private isInitialized = false;
@@ -187,7 +188,7 @@ class ChatGPTIntegration {
         return;
       }
 
-      await this.processWorkflowNodes(workflow);
+      await this.processWorkflowNodes(workflow, variables || {});
       
       const panel = document.querySelector('.gptchain-panel');
       if (panel) panel.remove();
@@ -197,7 +198,7 @@ class ChatGPTIntegration {
     }
   }
 
-  private async processWorkflowNodes(workflow: Workflow) {
+  private async processWorkflowNodes(workflow: Workflow, variables: Record<string, any> = {}) {
     const textArea = document.querySelector('textarea[data-id="root"]') as HTMLTextAreaElement ||
                     document.querySelector('#prompt-textarea') as HTMLTextAreaElement ||
                     document.querySelector('textarea[placeholder*="Message"]') as HTMLTextAreaElement ||
@@ -214,11 +215,8 @@ class ChatGPTIntegration {
       if (node.type === 'prompt' && node.data.prompt) {
         let prompt = node.data.prompt;
         
-        if (node.data.variables) {
-          for (const [key, value] of Object.entries(node.data.variables)) {
-            prompt = prompt.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
-          }
-        }
+        // Substitute variables using the centralized parser
+        prompt = substituteVariables(prompt, variables);
 
         console.log('Executing prompt:', prompt);
         
